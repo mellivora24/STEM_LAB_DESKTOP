@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>720</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>640</width>
+    <height>360</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>7680</width>
+    <height>4320</height>
+   </size>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>10</pointsize>
+    <weight>50</weight>
+    <italic>false</italic>
+    <bold>false</bold>
+    <strikeout>false</strikeout>
+    <kerning>false</kerning>
+   </font>
+  </property>
+  <property name="mouseTracking">
+   <bool>false</bool>
+  </property>
+  <property name="windowTitle">
+   <string>STEM Laboratory Desktop</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>assets/icon.ico</normaloff>assets/icon.ico</iconset>
+  </property>
+  <property name="autoFillBackground">
+   <bool>true</bool>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonIconOnly</enum>
+  </property>
+  <property name="animated">
+   <bool>true</bool>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="chart_widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>80</y>
+      <width>911</width>
+      <height>521</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="humi_title">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>250</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Độ ẩm (%):</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="humi_lcd">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>250</y>
+      <width>64</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="smallDecimalPoint">
+     <bool>false</bool>
+    </property>
+    <property name="digitCount">
+     <number>3</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="temp_tile">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>300</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Nhiệt độ (*C):</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ph_title">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>350</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Độ pH</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="oxi_title">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>400</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Lượng Oxi (%):</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="temp_title">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>300</y>
+      <width>64</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="digitCount">
+     <number>3</number>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="ph_title_2">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>350</y>
+      <width>64</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="digitCount">
+     <number>3</number>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="oxi_lcd">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>400</y>
+      <width>64</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="digitCount">
+     <number>3</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="all_values_title">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>160</y>
+      <width>181</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>MỘT VÀI GIÁ TRỊ KHÁC</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="chart_title">
+    <property name="geometry">
+     <rect>
+      <x>308</x>
+      <y>30</y>
+      <width>911</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TITLE OF CHART</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::RichText</enum>
+    </property>
+    <property name="scaledContents">
+     <bool>false</bool>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1280</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="connect_menu">
+    <property name="title">
+     <string>Kết nối</string>
+    </property>
+    <widget class="QMenu" name="com_selection">
+     <property name="title">
+      <string>Chọn cổng COM</string>
+     </property>
+     <addaction name="separator"/>
+    </widget>
+    <widget class="QMenu" name="com_baudrate">
+     <property name="title">
+      <string>Tốc độ giao tiếp</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="_baud300"/>
+     <addaction name="_baud1200"/>
+     <addaction name="_baud2400"/>
+     <addaction name="_baud4800"/>
+     <addaction name="_baud9600"/>
+     <addaction name="_baud19200"/>
+     <addaction name="_baud14400"/>
+     <addaction name="_baud28800"/>
+     <addaction name="_baud38400"/>
+     <addaction name="_baud57600"/>
+     <addaction name="_baud115200"/>
+    </widget>
+    <addaction name="com_selection"/>
+    <addaction name="com_baudrate"/>
+   </widget>
+   <widget class="QMenu" name="show_menu">
+    <property name="title">
+     <string>Hiển thị trên biểu đồ</string>
+    </property>
+    <addaction name="show_humidity"/>
+    <addaction name="show_temperature"/>
+    <addaction name="show_pH"/>
+    <addaction name="show_oxi"/>
+   </widget>
+   <widget class="QMenu" name="settings_menu">
+    <property name="title">
+     <string>Cài đặt</string>
+    </property>
+    <addaction name="step_y"/>
+    <addaction name="close_app"/>
+    <addaction name="help"/>
+   </widget>
+   <addaction name="settings_menu"/>
+   <addaction name="connect_menu"/>
+   <addaction name="show_menu"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="step_y">
+   <property name="text">
+    <string>Khoảng cách giữa các giá trị trên trục Y</string>
+   </property>
+  </action>
+  <action name="show_humidity">
+   <property name="text">
+    <string>Độ ẩm</string>
+   </property>
+  </action>
+  <action name="show_temperature">
+   <property name="text">
+    <string>Nhiệt độ</string>
+   </property>
+  </action>
+  <action name="show_pH">
+   <property name="text">
+    <string>Độ pH</string>
+   </property>
+  </action>
+  <action name="show_oxi">
+   <property name="text">
+    <string>Lượng Oxi</string>
+   </property>
+  </action>
+  <action name="actionCh_n_c_ng_COM">
+   <property name="text">
+    <string>Chọn cổng COM</string>
+   </property>
+  </action>
+  <action name="close_app">
+   <property name="text">
+    <string>Đóng ứng dụng</string>
+   </property>
+  </action>
+  <action name="help">
+   <property name="text">
+    <string>Trợ giúp?</string>
+   </property>
+  </action>
+  <action name="_baud9600">
+   <property name="text">
+    <string>9600 baud</string>
+   </property>
+  </action>
+  <action name="_baud115200">
+   <property name="text">
+    <string>115200 baud</string>
+   </property>
+  </action>
+  <action name="_baud300">
+   <property name="text">
+    <string>300 baurd</string>
+   </property>
+  </action>
+  <action name="_baud1200">
+   <property name="text">
+    <string>1200 baud</string>
+   </property>
+  </action>
+  <action name="_baud2400">
+   <property name="text">
+    <string>2400 baud</string>
+   </property>
+  </action>
+  <action name="_baud4800">
+   <property name="text">
+    <string>4800 baud</string>
+   </property>
+  </action>
+  <action name="_baud14400">
+   <property name="text">
+    <string>14400 baud</string>
+   </property>
+  </action>
+  <action name="_baud19200">
+   <property name="text">
+    <string>19200 baud</string>
+   </property>
+  </action>
+  <action name="_baud28800">
+   <property name="text">
+    <string>28800 baud</string>
+   </property>
+  </action>
+  <action name="_baud38400">
+   <property name="text">
+    <string>38400 baud</string>
+   </property>
+  </action>
+  <action name="_baud57600">
+   <property name="text">
+    <string>57600 baud</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
