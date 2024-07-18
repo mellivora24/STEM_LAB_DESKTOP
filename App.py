@@ -1,8 +1,9 @@
 import sys
-from PyQt5 import QtWidgets, uic
+from PyQt5.QtWidgets import *
+from PyQt5 import uic
 
 
-class MainWindow(QtWidgets.QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setFixedSize(1280, 720)
@@ -11,7 +12,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
