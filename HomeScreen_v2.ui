@@ -181,7 +181,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -238,6 +238,19 @@
      </item>
     </layout>
    </widget>
+   <widget class="QPushButton" name="stop_record">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>470</y>
+      <width>105</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>STOP</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -279,7 +292,12 @@
     <property name="title">
      <string>Cài đặt</string>
     </property>
-    <addaction name="step_y"/>
+    <widget class="QMenu" name="steps_y_menu">
+     <property name="title">
+      <string>Bước trục y</string>
+     </property>
+    </widget>
+    <addaction name="steps_y_menu"/>
     <addaction name="close_app"/>
     <addaction name="help"/>
    </widget>
@@ -287,11 +305,6 @@
    <addaction name="connect_menu"/>
    <addaction name="show_menu"/>
   </widget>
-  <action name="step_y">
-   <property name="text">
-    <string>Khoảng cách giữa các giá trị trên trục Y</string>
-   </property>
-  </action>
   <action name="show_humidity">
    <property name="text">
     <string>Độ ẩm</string>
