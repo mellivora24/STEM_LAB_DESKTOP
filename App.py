@@ -1,13 +1,12 @@
 import sys
-import threading
 import time
 import matplotlib
 import webbrowser
-from serial import Serial
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtCore
 import serial.tools.list_ports
 from matplotlib.figure import Figure
+from matplotlib.widgets import Cursor
 from matplotlib.ticker import MultipleLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
@@ -15,12 +14,14 @@ from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationTo
 matplotlib.use('Qt5Agg')
 ArduinoSerial = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
 
+
 class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         super(MplCanvas, self).__init__(fig)
         self.setParent(parent)
+
 
 class Worker(QtCore.QThread):
     data_received = QtCore.pyqtSignal(str)
@@ -34,6 +35,7 @@ class Worker(QtCore.QThread):
                 time.sleep(0.1)
             except:
                 print("Error...retrying!")
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -73,21 +75,13 @@ class MainWindow(QMainWindow):
         self.show_humidity.triggered.connect(lambda: self.switch_chart("BIỂU ĐỒ ĐỘ ẨM", 1))
         self.show_temperature.triggered.connect(lambda: self.switch_chart("BIỂU ĐỒ NHIỆT ĐỘ", 2))
 
-        steps_y = [0.5, 1, 2, 5, 10, 20, 50, 100, 1000]
-        for step in steps_y:
-            action_name = f'_step_y{step}'
-            action_tile = f'{step}'
-            steps_y_action = QAction(action_tile, self)
-            self.steps_y_menu.addAction(steps_y_action)
-            steps_y_action.triggered.connect(lambda checked, step=step: self.set_rangeY(step))
-
         baud_rates = [300, 1200, 2400, 4800, 9600, 19200, 14400, 28800, 38400, 57600, 115200]
         for baud in baud_rates:
             action_name = f'_baud{baud}'
             action_tile = f'{baud} baud'
             baud_action = QAction(action_tile, self)
             self.com_baudrate.addAction(baud_action)
-            baud_action.triggered.connect(lambda checked, baud=baud: self.set_baudrate(baud))
+            baud_action.triggered.connect(lambda: self.set_baudrate(baud))
 
         self.stop_record.clicked.connect(self.stop_read)
 
@@ -95,7 +89,7 @@ class MainWindow(QMainWindow):
     def handle_data(self, dataReceivedSerial):
         if dataReceivedSerial:
             convertedData = int(dataReceivedSerial)
-            if convertedData:
+            if convertedData <= 100:
                 self.append_data(self.global_index, convertedData)
                 self.update_chart()
 
@@ -103,34 +97,40 @@ class MainWindow(QMainWindow):
         if index == 1:
             self.data['humidity']['x'].append(len(self.data['humidity']['x']))
             self.data['humidity']['y'].append(value)
-            self.humi_lcd.display(value)
+            self.realtime_value.display(value)
+            self.values_title.setText("ĐỘ ẨM")
         elif index == 2:
             self.data['temperature']['x'].append(len(self.data['temperature']['x']))
             self.data['temperature']['y'].append(value)
-            self.temp_lcd.display(value)
+            self.realtime_value.display(value)
+            self.values_title.setText("NHIỆT ĐỘ")
         elif index == 3:
             self.data['ph']['x'].append(len(self.data['ph']['x']))
             self.data['ph']['y'].append(value)
-            self.ph_lcd.display(value)
+            self.realtime_value.display(value)
+            self.values_title.setText("ĐỘ PH")
         elif index == 4:
             self.data['oxygen']['x'].append(len(self.data['oxygen']['x']))
             self.data['oxygen']['y'].append(value)
-            self.oxi_lcd.display(value)
+            self.realtime_value.display(value)
+            self.values_title.setText("LƯỢNG OXI")
 
     def update_chart(self):
         self.canvas.axes.cla()
         if self.global_index == 1:
             self.canvas.axes.plot(self.data['humidity']['x'], self.data['humidity']['y'], 'r')
+            self.canvas.axes.set_ylabel("Humidity")
         elif self.global_index == 2:
             self.canvas.axes.plot(self.data['temperature']['x'], self.data['temperature']['y'], 'r')
+            self.canvas.axes.set_ylabel("Temperature")
         elif self.global_index == 3:
             self.canvas.axes.plot(self.data['ph']['x'], self.data['ph']['y'], 'r')
+            self.canvas.axes.set_ylabel("PH")
         elif self.global_index == 4:
             self.canvas.axes.plot(self.data['oxygen']['x'], self.data['oxygen']['y'], 'r')
+            self.canvas.axes.set_ylabel("Oxygen")
+        self.canvas.axes.set_xlabel('Time (ms)')
         self.canvas.draw()
-
-    def set_rangeY(self, step):
-        self.canvas.axes.yaxis.set_major_locator(MultipleLocator(step))
 
     def switch_chart(self, title, index):
         self.global_index = index
@@ -145,6 +145,7 @@ class MainWindow(QMainWindow):
             self.worker.terminate()
             self.stop_record.setText("CONTINUE")
             self.allow_read = False
+            self.cursor = Cursor(self.canvas.axes, horizOn=True, vertOn=True, color='green', linewidth=1)
         else:
             self.worker.start()
             self.stop_record.setText("STOP")
@@ -158,7 +159,7 @@ class MainWindow(QMainWindow):
         ports = self.list_serial_ports()
         for port in ports:
             action = QAction(port, self)
-            action.triggered.connect(lambda checked, port=port: self.set_com(port))
+            action.triggered.connect(lambda: self.set_com(port))
             self.com_selection.addAction(action)
 
     def set_com(self, com_name):
