@@ -1,7 +1,9 @@
 import sys
 import time
-import matplotlib
 import webbrowser
+import matplotlib
+import numpy as np
+import pandas as pd
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtCore
@@ -148,6 +150,26 @@ class Chart(FigureCanvas):
                                 self.annot.set_visible(False)
                             self.canvas.draw_idle()
 
+    def export_excel(self):
+        all_times = set(self.data['humidity']['x'] +
+                        self.data['temperature']['x'] +
+                        self.data['ph']['x'] +
+                        self.data['oxygen']['x'])
+        data_dict = {'Time (s)': [], 'Humidity (%)': [], 'Temperature (*C)': [], 'PH': [], 'Oxygen (%)': []}
+        for time in sorted(all_times):
+            data_dict['Time'].append(time)
+            data_dict['Humidity'].append(self.data['humidity']['y'][self.data['humidity']['x'].index(time)]
+                                         if time in self.data['humidity']['x'] else None)
+            data_dict['Temperature'].append(self.data['temperature']['y'][self.data['temperature']['x'].index(time)]
+                                            if time in self.data['temperature']['x'] else None)
+            data_dict['PH'].append(self.data['ph']['y'][self.data['ph']['x'].index(time)]
+                                   if time in self.data['ph']['x'] else None)
+            data_dict['Oxygen'].append(self.data['oxygen']['y'][self.data['oxygen']['x'].index(time)]
+                                       if time in self.data['oxygen']['x'] else None)
+        df = pd.DataFrame(data_dict)
+        df.to_excel('Result.xlsx', index=False, engine='openpyxl')
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -191,6 +213,7 @@ class MainWindow(QMainWindow):
         self.close_app.triggered.connect(self.quit)
         self.help.triggered.connect(self.readTheDocs)
         self.stop_record.clicked.connect(self.pause_receive)
+        self.export_excel.triggered.connect(self.to_excel)
         self.show_pH.triggered.connect(lambda: self.switch_chart("BIỂU ĐỒ ĐỘ PH", 3))
         self.show_oxi.triggered.connect(lambda: self.switch_chart("BIỂU ĐỒ LƯỢNG OXI", 4))
         self.show_humidity.triggered.connect(lambda: self.switch_chart("BIỂU ĐỒ ĐỘ ẨM", 1))
@@ -237,6 +260,9 @@ class MainWindow(QMainWindow):
         self.chart_title.setText(chart_title)
         self.values_title.setText(f"{chart_title[8:]}")
         self.ArduinoSerial.send(str(chart_index))
+
+    def to_excel(self):
+        self.ChartCanvas.export_excel()
 
     def readTheDocs(self):
         # print("Open web browser at: https://docs.stemvn.vn/vi/latest/")

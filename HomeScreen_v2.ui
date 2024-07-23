@@ -203,8 +203,9 @@ background-color: rgb(0, 0, 0);</string>
    </widget>
    <widget class="QMenu" name="settings_menu">
     <property name="title">
-     <string>Cài đặt</string>
+     <string>Tiện ích</string>
     </property>
+    <addaction name="export_excel"/>
     <addaction name="close_app"/>
     <addaction name="help"/>
    </widget>
@@ -240,6 +241,11 @@ background-color: rgb(0, 0, 0);</string>
   <action name="help">
    <property name="text">
     <string>Trợ giúp?</string>
+   </property>
+  </action>
+  <action name="export_excel">
+   <property name="text">
+    <string>Xuất file excel</string>
    </property>
   </action>
  </widget>
