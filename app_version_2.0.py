@@ -12,6 +12,7 @@ from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationTo
 
 matplotlib.use('Qt5Agg')
 
+
 class Arduino(QtCore.QThread):
     data_received = QtCore.pyqtSignal(str)
 
@@ -29,43 +30,38 @@ class Arduino(QtCore.QThread):
                     self.data_received.emit(data)
                 time.sleep(0.1)
             except Exception as e:
-                # print(f"Error: {e}")
                 pass
 
     def connect_serial(self, port=None, baudrate=None, timeout=None):
         try:
             self.ArduinoSerial = serial.Serial(port, baudrate, timeout=timeout)
-            # print(f"Connected to Arduino on port {port}!")
         except Exception as e:
-            # print(f"Failed to connect: {e}")
             self.is_connected = False
 
     def disconnect_serial(self):
         try:
             self.ArduinoSerial.close()
-            # print("Disconnected from Arduino!")
         except Exception as e:
             pass
-            # print(f"Failed to disconnect: {e}")
 
     def send(self, message):
-        while self.is_sended == False:
-            try:
-                self.ArduinoSerial.write(message.encode())
-                self.is_sended = True
-                print(f"Send: {message}")
-            except:
-                self.is_sended = False
-                print("Send faild")
+        try:
+            self.ArduinoSerial.write(message.encode())
+            self.is_sended = True
+            # print(f"Sent: {message}")
+        except Exception as e:
+            self.is_sended = False
+            # print(f"Send failed: {e}")
 
 
 class Chart(FigureCanvas):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
+        self.line = None
         fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
         super(Chart, self).__init__(fig)
         self.setParent(parent)
 
+        self.axes = fig.add_subplot(111)
         self.global_index = 1
         self.data = {
             'humidity': {'x': [], 'y': []},
@@ -74,15 +70,27 @@ class Chart(FigureCanvas):
             'oxygen': {'x': [], 'y': []}
         }
 
+        self.canvas = FigureCanvas(fig)
+
+        self.annot = self.axes.annotate("Details", xy=(0, 0), xytext=(20, 20),
+                                        textcoords="offset points",
+                                        bbox=dict(boxstyle="round", fc="w"),
+                                        arrowprops=dict(arrowstyle="->"))
+        self.annot.set_visible(False)
+
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.parent().ui.gridLayout.addWidget(self.toolbar, 0, 1)
+        self.parent().ui.gridLayout.addWidget(self.canvas, 1, 1)
+        self.canvas.mpl_connect("motion_notify_event", self.hover)
+
     @QtCore.pyqtSlot(str)
     def handle_data(self, data):
         if data:
             converted_data = int(data)
             if converted_data <= 100:
-                # print(f"Data received is: {converted_data}")
                 self.append_data(self.global_index, converted_data)
-                # self.update_chart()
-                
+                self.update_chart()
+
     def append_data(self, index, value):
         if index == 1:
             self.data['humidity']['x'].append(len(self.data['humidity']['x']))
@@ -102,22 +110,43 @@ class Chart(FigureCanvas):
             self.parent().realtime_value.display(value)
 
     def update_chart(self):
-        self.axes.cla()
+        self.axes.cla()  # Clear the axes
         if self.global_index == 1:
-            self.axes.plot(self.data['humidity']['x'], self.data['humidity']['y'], 'r')
+            self.line, = self.axes.plot(self.data['humidity']['x'], self.data['humidity']['y'], 'r', lw=2)
             self.axes.set_ylabel("Humidity")
         elif self.global_index == 2:
-            self.axes.plot(self.data['temperature']['x'], self.data['temperature']['y'], 'r')
+            self.line, = self.axes.plot(self.data['temperature']['x'], self.data['temperature']['y'], 'r', lw=2)
             self.axes.set_ylabel("Temperature")
         elif self.global_index == 3:
-            self.axes.plot(self.data['ph']['x'], self.data['ph']['y'], 'r')
+            self.line, = self.axes.plot(self.data['ph']['x'], self.data['ph']['y'], 'r', lw=2)
             self.axes.set_ylabel("PH")
         elif self.global_index == 4:
-            self.axes.plot(self.data['oxygen']['x'], self.data['oxygen']['y'], 'r')
+            self.line, = self.axes.plot(self.data['oxygen']['x'], self.data['oxygen']['y'], 'r', lw=2)
             self.axes.set_ylabel("Oxygen")
-        self.axes.set_xlabel('Time (ms)')
-        self.draw()
-    
+        self.axes.set_xlabel('Time (s)')
+        self.canvas.draw_idle()
+
+    def hover(self, event):
+        if not self.parent().allow_read:
+            vis = self.annot.get_visible()
+            if event.inaxes == self.axes:
+                for line in self.axes.get_lines():
+                    cont, ind = line.contains(event)
+                    if cont:
+                        x, y = line.get_data()
+                        if "ind" in ind and len(ind["ind"]) > 0:
+                            idx = ind["ind"][0]
+                            text = f"Time: {x[idx]:.2f}\nValue: {y[idx]:.2f}"
+                            self.annot.get_bbox_patch().set_alpha(0.4)
+                            self.annot = self.axes.annotate(text=text, xy=(x[idx], y[idx]), xytext=(15, 15),
+                                                            textcoords="offset points",
+                                                            bbox=dict(boxstyle="round", fc="w"),
+                                                            arrowprops=dict(arrowstyle="->"))
+                            if not vis:
+                                self.annot.set_visible(True)
+                            else:
+                                self.annot.set_visible(False)
+                            self.canvas.draw_idle()
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -181,9 +210,9 @@ class MainWindow(QMainWindow):
             self.allow_read = True
             self.ArduinoSerial.start()
             self.stop_record.setText("STOP")
-            print(f"Connected to on port {self.port}, baudrate {self.baud}!")
+            # print(f"Connected to on port {self.port}, baudrate {self.baud}!")
         except Exception as e:
-            print(f"Connection failed: {e}")
+            # print(f"Connection failed: {e}")
             self.ArduinoSerial.is_connected = False
             self.stop_record.setText("START")
 
@@ -192,12 +221,12 @@ class MainWindow(QMainWindow):
             self.allow_read = False
             self.ArduinoSerial.terminate()
             self.stop_record.setText("CONTINUE")
-            print("STOP receiving data from Serial")
+            # print("STOP receiving data from Serial")
         else:
             self.allow_read = True
             self.ArduinoSerial.start()
             self.stop_record.setText("STOP")
-            print("CONTINUE receiving data from Serial")
+            # print("CONTINUE receiving data from Serial")
 
     def show_chart(self):
         pass
@@ -210,11 +239,11 @@ class MainWindow(QMainWindow):
         self.ArduinoSerial.send(str(chart_index))
 
     def readTheDocs(self):
-        print("Open web browser at: https://docs.stemvn.vn/vi/latest/")
+        # print("Open web browser at: https://docs.stemvn.vn/vi/latest/")
         webbrowser.open("https://docs.stemvn.vn/vi/latest/")
 
     def quit(self) -> None:
-        print("Close app")
+        # print("Close app")
         self.ArduinoSerial.disconnect_serial()
         QApplication.quit()
         sys.exit()
