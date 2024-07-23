@@ -183,7 +183,7 @@ class MainWindow(QMainWindow):
         self.baud = 9600
         self.chart_index = 1
         self.allow_read = True
-        self.port = '/dev/ttyUSB0'
+        self.port = '/dev/ttyUSB0' # need to change depend on your OS
 
         self.ChartCanvas = Chart(self)
         self.ArduinoSerial = Arduino()
