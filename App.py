@@ -2,12 +2,11 @@ import sys
 import time
 import matplotlib
 import webbrowser
+from mplcursors import Cursor
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtCore
 import serial.tools.list_ports
 from matplotlib.figure import Figure
-from matplotlib.widgets import Cursor
-from matplotlib.ticker import MultipleLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 
@@ -16,16 +15,59 @@ ArduinoSerial = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
 
 
 class MplCanvas(FigureCanvas):
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
+    def __init__(self, parent=None, width=5, height=4, dpi=100, data=None):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         super(MplCanvas, self).__init__(fig)
         self.setParent(parent)
+        self.update_chart(data)
+        self.annot = self.axes.annotate("", xy=(0,0), xytext=(20,20),
+                                        textcoords="offset points",
+                                        bbox=dict(boxstyle="round", fc="w"),
+                                        arrowprops=dict(arrowstyle="->"))
+        self.annot.set_visible(False)
+        self.mpl_connect("motion_notify_event", self.hover)
+
+    def update_chart(self, data, index=None):
+        self.axes.cla()
+        if index == 1:
+            self.line, = self.axes.plot(data['humidity']['x'], data['humidity']['y'], 'r')
+            self.axes.set_ylabel("Humidity")
+        elif index == 2:
+            self.line, = self.axes.plot(data['temperature']['x'], data['temperature']['y'], 'r')
+            self.axes.set_ylabel("Temperature")
+        elif index == 3:
+            self.line, = self.axes.plot(data['ph']['x'], data['ph']['y'], 'r')
+            self.axes.set_ylabel("PH")
+        elif index == 4:
+            self.line, = self.axes.plot(data['oxygen']['x'], data['oxygen']['y'], 'r')
+            self.axes.set_ylabel("Oxygen")
+        self.axes.set_xlabel('Time (ms)')
+        self.draw_idle()
+
+    def update_annot(self, ind):
+        x, y = self.line.get_data()
+        self.annot.xy = (x[ind["ind"][0]], y[ind["ind"][0]])
+        text = f"x: {x[ind['ind'][0]]:.2f}\ny: {y[ind['ind'][0]]:.2f}"
+        self.annot.set_text(text)
+        self.annot.get_bbox_patch().set_alpha(0.4)
+
+    def hover(self, event):
+        vis = self.annot.get_visible()
+        if event.inaxes == self.axes:
+            cont, ind = self.line.contains(event)
+            if cont:
+                self.update_annot(ind)
+                self.annot.set_visible(True)
+                self.draw_idle()
+            else:
+                if vis:
+                    self.annot.set_visible(False)
+                    self.draw_idle()
 
 
 class Worker(QtCore.QThread):
     data_received = QtCore.pyqtSignal(str)
-
     def run(self):
         while True:
             try:
@@ -42,18 +84,18 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.baudrate = 9600
         self.allow_read = True
-        self.global_index = 1
-
-        self.data = {
-            'humidity': {'x': [], 'y': []},
-            'temperature': {'x': [], 'y': []},
-            'ph': {'x': [], 'y': []},
-            'oxygen': {'x': [], 'y': []}
-        }
+        # self.global_index = 1
+        #
+        # self.data = {
+        #     'humidity': {'x': [], 'y': []},
+        #     'temperature': {'x': [], 'y': []},
+        #     'ph': {'x': [], 'y': []},
+        #     'oxygen': {'x': [], 'y': []}
+        # }
 
         self.ui = uic.loadUi('HomeScreen_v2.ui', self)
         self.setFixedSize(1252, 670)
-        self.switch_chart("BIỂU ĐỒ ĐỘ ẨM", 1)
+        # self.switch_chart("BIỂU ĐỒ ĐỘ ẨM", 1)
         self.show()
 
         self.scan_ports()
@@ -62,11 +104,11 @@ class MainWindow(QMainWindow):
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.ui.gridLayout.addWidget(self.toolbar, 0, 1)
         self.ui.gridLayout.addWidget(self.canvas, 1, 1)
-        self.update_chart()
-
-        self.worker = Worker()
-        self.worker.data_received.connect(self.handle_data)
-        self.worker.start()
+        # self.update_chart()
+        #
+        # self.worker = Worker()
+        # self.worker.data_received.connect(self.handle_data)
+        # self.worker.start()
 
         self.help.triggered.connect(self.help_link)
         self.close_app.triggered.connect(self.stop_app)
@@ -77,7 +119,6 @@ class MainWindow(QMainWindow):
 
         baud_rates = [300, 1200, 2400, 4800, 9600, 19200, 14400, 28800, 38400, 57600, 115200]
         for baud in baud_rates:
-            action_name = f'_baud{baud}'
             action_tile = f'{baud} baud'
             baud_action = QAction(action_tile, self)
             self.com_baudrate.addAction(baud_action)
@@ -85,67 +126,12 @@ class MainWindow(QMainWindow):
 
         self.stop_record.clicked.connect(self.stop_read)
 
-    @QtCore.pyqtSlot(str)
-    def handle_data(self, dataReceivedSerial):
-        if dataReceivedSerial:
-            convertedData = int(dataReceivedSerial)
-            if convertedData <= 100:
-                self.append_data(self.global_index, convertedData)
-                self.update_chart()
-
-    def append_data(self, index, value):
-        if index == 1:
-            self.data['humidity']['x'].append(len(self.data['humidity']['x']))
-            self.data['humidity']['y'].append(value)
-            self.realtime_value.display(value)
-            self.values_title.setText("ĐỘ ẨM")
-        elif index == 2:
-            self.data['temperature']['x'].append(len(self.data['temperature']['x']))
-            self.data['temperature']['y'].append(value)
-            self.realtime_value.display(value)
-            self.values_title.setText("NHIỆT ĐỘ")
-        elif index == 3:
-            self.data['ph']['x'].append(len(self.data['ph']['x']))
-            self.data['ph']['y'].append(value)
-            self.realtime_value.display(value)
-            self.values_title.setText("ĐỘ PH")
-        elif index == 4:
-            self.data['oxygen']['x'].append(len(self.data['oxygen']['x']))
-            self.data['oxygen']['y'].append(value)
-            self.realtime_value.display(value)
-            self.values_title.setText("LƯỢNG OXI")
-
-    def update_chart(self):
-        self.canvas.axes.cla()
-        if self.global_index == 1:
-            self.canvas.axes.plot(self.data['humidity']['x'], self.data['humidity']['y'], 'r')
-            self.canvas.axes.set_ylabel("Humidity")
-        elif self.global_index == 2:
-            self.canvas.axes.plot(self.data['temperature']['x'], self.data['temperature']['y'], 'r')
-            self.canvas.axes.set_ylabel("Temperature")
-        elif self.global_index == 3:
-            self.canvas.axes.plot(self.data['ph']['x'], self.data['ph']['y'], 'r')
-            self.canvas.axes.set_ylabel("PH")
-        elif self.global_index == 4:
-            self.canvas.axes.plot(self.data['oxygen']['x'], self.data['oxygen']['y'], 'r')
-            self.canvas.axes.set_ylabel("Oxygen")
-        self.canvas.axes.set_xlabel('Time (ms)')
-        self.canvas.draw()
-
-    def switch_chart(self, title, index):
-        self.global_index = index
-        self.chart_title.setText(title)
-        try:
-            ArduinoSerial.write(str(index).encode())
-        except:
-            print("Error...retrying!")
-
     def stop_read(self):
         if self.allow_read:
             self.worker.terminate()
             self.stop_record.setText("CONTINUE")
             self.allow_read = False
-            self.cursor = Cursor(self.canvas.axes, horizOn=True, vertOn=True, color='green', linewidth=1)
+
         else:
             self.worker.start()
             self.stop_record.setText("STOP")
