@@ -1,8 +1,8 @@
+import os
 import sys
 import time
 import webbrowser
 import matplotlib
-import numpy as np
 import pandas as pd
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
@@ -13,6 +13,14 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 
 matplotlib.use('Qt5Agg')
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class Arduino(QtCore.QThread):
@@ -174,7 +182,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ui = uic.loadUi("HomeScreen_v2.ui", self)
-        self.setWindowIcon(QIcon("assets/icon.ico"))
+        self.setWindowIcon(QIcon(resource_path("assets\\icon.ico")))
         self.setFixedSize(1252, 670)
         self.show()
 
