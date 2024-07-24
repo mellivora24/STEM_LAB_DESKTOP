@@ -71,6 +71,7 @@ class Chart(FigureCanvas):
         super(Chart, self).__init__(fig)
         self.setParent(parent)
 
+        self.last_index = 1
         self.axes = fig.add_subplot(111)
         self.global_index = 1
         self.data = {
@@ -87,6 +88,7 @@ class Chart(FigureCanvas):
                                         bbox=dict(boxstyle="round", fc="w"),
                                         arrowprops=dict(arrowstyle="->"))
         self.annot.set_visible(False)
+        self.last_annot =self.annot
 
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.parent().ui.gridLayout.addWidget(self.toolbar, 0, 1)
@@ -120,43 +122,46 @@ class Chart(FigureCanvas):
             self.parent().realtime_value.display(value)
 
     def update_chart(self):
-        self.axes.cla()  # Clear the axes
+        if self.global_index != self.last_index:
+            self.axes.cla()  # Clear the axes
+            self.last_index = self.global_index
+        # self.axes.cla()  # Clear the axes
         if self.global_index == 1:
-            self.line, = self.axes.plot(self.data['humidity']['x'], self.data['humidity']['y'], 'r', lw=2)
+            self.line, = self.axes.plot(self.data['humidity']['x'], self.data['humidity']['y'], 'r')
             self.axes.set_ylabel("Humidity")
         elif self.global_index == 2:
-            self.line, = self.axes.plot(self.data['temperature']['x'], self.data['temperature']['y'], 'r', lw=2)
+            self.line, = self.axes.plot(self.data['temperature']['x'], self.data['temperature']['y'], 'r')
             self.axes.set_ylabel("Temperature")
         elif self.global_index == 3:
-            self.line, = self.axes.plot(self.data['ph']['x'], self.data['ph']['y'], 'r', lw=2)
+            self.line, = self.axes.plot(self.data['ph']['x'], self.data['ph']['y'], 'r')
             self.axes.set_ylabel("PH")
         elif self.global_index == 4:
-            self.line, = self.axes.plot(self.data['oxygen']['x'], self.data['oxygen']['y'], 'r', lw=2)
+            self.line, = self.axes.plot(self.data['oxygen']['x'], self.data['oxygen']['y'], 'r')
             self.axes.set_ylabel("Oxygen")
         self.axes.set_xlabel('Time (s)')
         self.canvas.draw_idle()
 
     def hover(self, event):
-        if not self.parent().allow_read:
-            vis = self.annot.get_visible()
-            if event.inaxes == self.axes:
-                for line in self.axes.get_lines():
-                    cont, ind = line.contains(event)
-                    if cont:
-                        x, y = line.get_data()
-                        if "ind" in ind and len(ind["ind"]) > 0:
-                            idx = ind["ind"][0]
-                            text = f"Time: {x[idx]:.2f}\nValue: {y[idx]:.2f}"
-                            self.annot.get_bbox_patch().set_alpha(0.4)
-                            self.annot = self.axes.annotate(text=text, xy=(x[idx], y[idx]), xytext=(15, 15),
-                                                            textcoords="offset points",
-                                                            bbox=dict(boxstyle="round", fc="w"),
-                                                            arrowprops=dict(arrowstyle="->"))
-                            if not vis:
-                                self.annot.set_visible(True)
-                            else:
-                                self.annot.set_visible(False)
-                            self.canvas.draw_idle()
+        vis = self.annot.get_visible()
+        if event.inaxes == self.axes:
+            for line in self.axes.get_lines():
+                cont, ind = line.contains(event)
+                if cont:
+                    x, y = line.get_data()
+                    if "ind" in ind and len(ind["ind"]) > 0:
+                        self.annot.remove()
+                        idx = ind["ind"][0]
+                        text = f"Time: {x[idx]:.0f}\nValue: {y[idx]:.2f}"
+                        self.annot.get_bbox_patch().set_alpha(0.4)
+                        self.annot = self.axes.annotate(text=text, xy=(x[idx], y[idx]), xytext=(15, 15),
+                                                        textcoords="offset points",
+                                                        bbox=dict(boxstyle="round", fc="w"),
+                                                        arrowprops=dict(arrowstyle="->"))
+                        if not vis:
+                            self.annot.set_visible(True)
+                        else:
+                            self.annot.set_visible(False)
+                        self.canvas.draw_idle()
 
     def export_excel(self):
         all_times = set(self.data['humidity']['x'] +
