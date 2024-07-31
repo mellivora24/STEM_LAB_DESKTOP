@@ -293,6 +293,9 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
+    uri = None
+    if len(sys.argv) > 1:
+        uri = urllib.parse.unquote(sys.argv[1])
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
