@@ -47,6 +47,7 @@ class Arduino(QtCore.QThread):
             self.ArduinoSerial = serial.Serial(port, baudrate, timeout=timeout)
         except Exception as e:
             self.is_connected = False
+            pass
 
     def disconnect_serial(self):
         try:
@@ -207,14 +208,17 @@ class MainWindow(QMainWindow):
 
         self.switch_chart("BIỂU ĐỒ ĐỘ ẨM", 1)
 
+
     def setup_menubar(self):
         list_ports = serial.tools.list_ports.comports()
         ports = [port.device for port in list_ports]
         for port in ports:
-            com_title = f'{port}'
-            com_action = QAction(com_title, self)
-            self.com_selection.addAction(com_action)
-            com_action.triggered.connect(lambda checked, port=port: self.setup_com(port))
+            port_name = port.split('/')[2][3]
+            if port_name.find('USB') != -1:
+                com_title = f'{port}'
+                com_action = QAction(com_title, self)
+                self.com_selection.addAction(com_action)
+                com_action.triggered.connect(lambda checked, port=port: self.setup_com(port))
 
         baud_rates = [300, 1200, 2400, 4800, 9600, 19200, 14400, 28800, 38400, 57600, 115200]
         for baud in baud_rates:
